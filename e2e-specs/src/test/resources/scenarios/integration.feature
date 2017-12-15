@@ -1,4 +1,4 @@
-Feature: Integration of Users and Surveys servers
+Feature: Integration of Users and Surveys microservices
 
   Background:
     Given there is a Users server
