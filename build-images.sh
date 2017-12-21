@@ -1,10 +1,12 @@
 #!/bin/bash
 
+export ROOTDIR=$PWD/..
+
 # build image pestakit/users
-cd ../microservice-users
+cd $ROOTDIR/microservice-users
 ./build-image.sh
 
 # build image pestakit/surveys
-cd ../microservice-survey
+cd $ROOTDIR/microservice-survey
 ./build-image.sh
 
