@@ -9,6 +9,7 @@ services:
       - surveys-db
     environment:
       - "spring_datasource_url=jdbc:mysql://surveys-db:3306/survey_schema"
+      - "users_security_api_url=http://microservice-users:8080/api"
   surveys-db:
     image: pestakit/surveys-db
     environment:
