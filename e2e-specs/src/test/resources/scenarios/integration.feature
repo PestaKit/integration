@@ -5,8 +5,14 @@ Feature: Integration of Users and Surveys microservices
     And there is a Surveys server
 
 
-   #1
-  Scenario: I can create a user
-    Given I have a correct payload to create a user
-    When I POST it to the /users endpoint
-    Then I receive a 201 user API status code
+
+  #Scenario: I can create a user, get the token and create a question
+   # Given I have a correct payload to create a user
+    #When I POST it to the /users endpoint
+    #Then I receive a 201 user API status code
+
+ #1
+  Scenario: I can't create a question without token
+    Given I have a question with full payload
+    When I POST it to the /questions endpoint
+    Then I receive a 403 survey API status code
