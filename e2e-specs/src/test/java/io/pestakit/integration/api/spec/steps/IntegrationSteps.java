@@ -1,5 +1,6 @@
 package io.pestakit.integration.api.spec.steps;
 
+import com.squareup.okhttp.OkHttpClient;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
@@ -8,6 +9,7 @@ import io.pestakit.integration.api.spec.helpers.Environment;
 import io.pestakit.surveys.ApiException;
 import io.pestakit.surveys.api.dto.Choice;
 import io.pestakit.surveys.api.dto.Question;
+import io.pestakit.users.ApiClient;
 import io.pestakit.users.api.dto.User;
 
 
@@ -35,7 +37,7 @@ public class IntegrationSteps {
     private User user;
     private long uid;
     private Object userLocation;
-    private String userTokenStr;
+    private String userTokenStr = "";
 
     //API Surveys
     private io.pestakit.surveys.api.DefaultApi surveysApi;
@@ -60,6 +62,13 @@ public class IntegrationSteps {
 
 
 
+
+    @Given("^I have a question with full payload and a token$")
+    public void i_have_a_question_with_full_payload_and_a_token() throws Throwable {
+        i_have_a_question_with_full_payload();
+        i_have_a_correct_payload_to_create_a_user();
+        i_POST_it_to_the_users_endpoint();
+    }
 
 
     @Given("^I have a question with full payload$")
@@ -134,6 +143,9 @@ public class IntegrationSteps {
     @When("^I POST it to the /questions endpoint$")
     public void i_POST_it_to_the_questions_endpoint() throws Throwable {
         try {
+            String value = "Bearer "+userTokenStr;
+            surveysApi.getApiClient().addDefaultHeader("Authorization", value);
+
             lastApiResponseSurveysApi = surveysApi.createQuestionWithHttpInfo(question);
             lastApiCallThrewExceptionSurveysApi = false;
             lastApiExceptionSurveysApi = null;
