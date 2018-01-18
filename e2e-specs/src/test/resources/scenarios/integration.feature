@@ -20,5 +20,5 @@ Feature: Integration of Users and Surveys microservices
  #2
   Scenario: I can create a question if I have a token
     Given I have a question with full payload and a token
-    When I POST it to the /questions endpoint
+    When I POST it to the /questions endpoint with a token
     Then I receive a 201 survey API status code

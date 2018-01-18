@@ -1,6 +1,5 @@
 package io.pestakit.integration.api.spec.steps;
 
-import com.squareup.okhttp.OkHttpClient;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
@@ -9,7 +8,8 @@ import io.pestakit.integration.api.spec.helpers.Environment;
 import io.pestakit.surveys.ApiException;
 import io.pestakit.surveys.api.dto.Choice;
 import io.pestakit.surveys.api.dto.Question;
-import io.pestakit.users.ApiClient;
+import io.pestakit.users.api.dto.Credentials;
+import io.pestakit.users.api.dto.Token;
 import io.pestakit.users.api.dto.User;
 
 
@@ -36,8 +36,7 @@ public class IntegrationSteps {
     private int lastStatusCodeUsersApi;
     private User user;
     private long uid;
-    private Object userLocation;
-    private String userTokenStr = "";
+    private Token userToken = new Token();
 
     //API Surveys
     private io.pestakit.surveys.api.DefaultApi surveysApi;
@@ -68,6 +67,7 @@ public class IntegrationSteps {
         i_have_a_question_with_full_payload();
         i_have_a_correct_payload_to_create_a_user();
         i_POST_it_to_the_users_endpoint();
+        i_POST_it_to_the_auth_endpoint();
     }
 
 
@@ -124,10 +124,6 @@ public class IntegrationSteps {
     public void i_POST_it_to_the_users_endpoint() throws Throwable {
         try {
             lastApiResponseUsersApi = usersApi.createUserWithHttpInfo(user);
-            userLocation = lastApiResponseUsersApi.getHeaders().get("Location");
-            String userLocationStr = userLocation.toString();
-            userTokenStr = userLocationStr.substring(userLocationStr.lastIndexOf('/') + 1);
-            userTokenStr = userTokenStr.substring(0, userTokenStr.length() - 1);
             lastApiCallThrewExceptionUsersApi = false;
             lastApiExceptionUsersApi = null;
             lastStatusCodeUsersApi = lastApiResponseUsersApi.getStatusCode();
@@ -140,12 +136,53 @@ public class IntegrationSteps {
     }
 
 
+    @When("^I POST it to the /auth endpoint$")
+    public void i_POST_it_to_the_auth_endpoint() throws Throwable {
+        try {
+            Credentials credentials = new Credentials();
+            credentials.setPassword(user.getPassword());
+            credentials.setIdentifier(user.getUsername());
+            lastApiResponseUsersApi = usersApi.authWithHttpInfo(credentials);
+            userToken = (Token) lastApiResponseUsersApi.getData();
+            lastApiCallThrewExceptionUsersApi = false;
+            lastApiExceptionUsersApi = null;
+            lastStatusCodeUsersApi = lastApiResponseUsersApi.getStatusCode();
+        } catch (io.pestakit.users.ApiException e) {
+            lastApiCallThrewExceptionUsersApi = true;
+            lastApiResponseUsersApi = null;
+            lastApiExceptionUsersApi = e;
+            lastStatusCodeUsersApi = lastApiExceptionUsersApi.getCode();
+        }
+    }
+
+
+    @When("^I POST it to the /questions endpoint with a token$")
+    public void i_POST_it_to_the_questions_endpoint_with_a_token() throws Throwable {
+        try {
+            String value = "Bearer " + userToken.getToken();
+            surveysApi.getApiClient().addDefaultHeader("Authorization", value);
+
+            lastApiResponseSurveysApi = surveysApi.createQuestionWithHttpInfo(question);
+            lastApiCallThrewExceptionSurveysApi = false;
+            lastApiExceptionSurveysApi = null;
+            lastStatusCodeSurveysApi = lastApiResponseSurveysApi.getStatusCode();
+            questionLocation = lastApiResponseSurveysApi.getHeaders().get("Location");
+            String locationStr = questionLocation.toString();
+            String idStr = locationStr.substring(locationStr.lastIndexOf('/') + 1);
+            idStr = idStr.substring(0, idStr.length() - 1);
+            questionId = Integer.parseInt(idStr);
+        } catch (ApiException e) {
+            lastApiCallThrewExceptionSurveysApi = true;
+            lastApiResponseSurveysApi = null;
+            lastApiExceptionSurveysApi = e;
+            lastStatusCodeSurveysApi = lastApiExceptionSurveysApi.getCode();
+        }
+    }
+
+
     @When("^I POST it to the /questions endpoint$")
     public void i_POST_it_to_the_questions_endpoint() throws Throwable {
         try {
-            String value = "Bearer "+userTokenStr;
-            surveysApi.getApiClient().addDefaultHeader("Authorization", value);
-
             lastApiResponseSurveysApi = surveysApi.createQuestionWithHttpInfo(question);
             lastApiCallThrewExceptionSurveysApi = false;
             lastApiExceptionSurveysApi = null;
